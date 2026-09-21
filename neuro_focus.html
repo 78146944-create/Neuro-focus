@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuro-Focus | Lectura Accesible para TDAH y Dislexia</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Accessibility: Lexend, Atkinson Hyperlegible, Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'lexend': ['Lexend', 'sans-serif'],
+                        'atkinson': ['Atkinson Hyperlegible', 'sans-serif'],
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        cream: {
+                            50: '#FFFDF9',
+                            100: '#FAF6EE',
+                            200: '#F3EAD8',
+                        },
+                        mint: {
+                            50: '#F0F9F5',
+                            100: '#E1F3EC',
+                            800: '#1B4D3E',
+                        },
+                        softblue: {
+                            50: '#F0F5FA',
+                            100: '#E1EBF5',
+                            800: '#1E3A5F',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Dyslexia & ADHD Accessibility Rules */
+        .font-dyslexic-lexend { font-family: 'Lexend', sans-serif !important; }
+        .font-dyslexic-atkinson { font-family: 'Atkinson Hyperlegible', sans-serif !important; }
+        .font-standard { font-family: 'Inter', sans-serif !important; }
+
+        /* Reading Line Guide Overlay */
+        #focus-ruler {
+            pointer-events: none;
+            position: fixed;
+            left: 0;
+            width: 100vw;
+            height: 52px;
+            background: rgba(254, 240, 138, 0.25);
+            border-top: 2px solid #eab308;
+            border-bottom: 2px solid #eab308;
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.45);
+            z-index: 9999;
+            transition: top 0.05s ease-out;
+            display: none;
+        }
+
+        /* Pulse highlight for currently read TTS phrase */
+        .tts-active {
+            background-color: rgba(253, 224, 71, 0.6) !important;
+            border-radius: 4px;
+            padding: 2px 4px;
+        }
+
+        /* Responsive smooth transitions */
+        .theme-transition {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+    </style>
+</head>
+<body id="app-body" class="bg-cream-100 text-slate-800 font-lexend theme-transition min-h-screen flex flex-col antialiased selection:bg-amber-200 selection:text-amber-900">
+
+    <!-- Reading Ruler Bar Overlay for ADHD/Dyslexia focus -->
+    <div id="focus-ruler"></div>
+
+    <!-- Accessibility Control Topbar -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-indigo-200 dark:shadow-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-700 via-purple-700 to-amber-600 dark:from-indigo-400 dark:to-amber-400 bg-clip-text text-transparent">
+                        Neuro-Focus
+                    </h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium hidden sm:block">Lectura Accesible & Cognitiva</p>
+                </div>
+            </div>
+
+            <!-- Accessibility Toolbar Controls -->
+            <div class="flex items-center flex-wrap gap-2 text-xs sm:text-sm">
+                <!-- Dyslexia Font Toggle -->
+                <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1 border border-slate-200 dark:border-slate-700">
+                    <button id="font-lexend-btn" onclick="setFont('lexend')" class="px-2.5 py-1 rounded-md font-medium transition-all bg-white dark:bg-slate-700 shadow-sm text-indigo-700 dark:text-indigo-300" title="Tipografía Lexend (Recomendada TDAH)">Lexend</button>
+                    <button id="font-atkinson-btn" onclick="setFont('atkinson')" class="px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900" title="Tipografía Atkinson Hyperlegible">Atkinson</button>
+                    <button id="font-inter-btn" onclick="setFont('inter')" class="px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900" title="Tipografía Estándar">Estándar</button>
+                </div>
+
+                <!-- Color Tint Theme Switcher -->
+                <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <button onclick="setTheme('cream')" class="w-6 h-6 rounded-full bg-[#FAF6EE] border border-amber-300 hover:scale-110 transition-transform" title="Tema crema relajante"></button>
+                    <button onclick="setTheme('mint')" class="w-6 h-6 rounded-full bg-[#E1F3EC] border border-emerald-300 hover:scale-110 transition-transform" title="Tema verde menta"></button>
+                    <button onclick="setTheme('softblue')" class="w-6 h-6 rounded-full bg-[#E1EBF5] border border-blue-300 hover:scale-110 transition-transform" title="Tema azul suave"></button>
+                    <button onclick="setTheme('dark')" class="w-6 h-6 rounded-full bg-slate-900 border border-slate-700 hover:scale-110 transition-transform" title="Tema oscuro nocturno"></button>
+                </div>
+
+                <!-- Text Size Adjusters -->
+                <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1 border border-slate-200 dark:border-slate-700">
+                    <button onclick="changeFontSize(-1)" class="px-2 py-1 font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded" title="Disminuir tamaño de letra">A-</button>
+                    <button onclick="changeFontSize(1)" class="px-2 py-1 font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded" title="Aumentar tamaño de letra">A+</button>
+                </div>
+
+                <!-- Reading Ruler Toggle -->
+                <button id="ruler-toggle-btn" onclick="toggleReadingRuler()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
+                    <span>📏</span>
+                    <span class="hidden md:inline">Regla Enfoque</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-6 sm:py-8 space-y-6">
+
+        <!-- Intro Banner for Cognitive Accessibility -->
+        <div class="bg-gradient-to-r from-indigo-900 to-purple-900 text-white rounded-2xl p-5 sm:p-6 shadow-lg shadow-indigo-950/10 relative overflow-hidden">
+            <div class="relative z-10 space-y-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-800/80 border border-indigo-600/50 text-xs font-semibold text-amber-300">
+                    <span>✨ Potenciado por Inteligencia Artificial Psicopedagógica</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-bold">Transforma textos densos en lectura clara y procesable</h2>
+                <p class="text-indigo-200 text-sm sm:text-base max-w-2xl">
+                    Diseñado con principios de accesibilidad cognitiva para personas con TDAH, dislexia o fatiga mental. Reduce la carga cognitiva al instante.
+                </p>
+            </div>
+            <!-- Decorative blur shape -->
+            <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-purple-500/20 rounded-full blur-2xl pointer-events-none"></div>
+        </div>
+
+        <!-- API Key Configuration Bar -->
+        <section class="bg-white dark:bg-slate-800/90 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm transition-all">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-semibold text-sm">
+                    <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                    <span>Configuración de API Key (Gemini)</span>
+                </div>
+                <div class="w-full sm:w-auto flex items-center gap-2">
+                    <div class="relative flex-grow sm:w-72">
+                        <input id="api-key-input" type="password" placeholder="Ingresa tu Gemini API Key..." 
+                            class="w-full pl-3 pr-10 py-2 rounded-xl text-sm border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                        <button onclick="toggleApiKeyVisibility()" type="button" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <svg id="eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <button onclick="saveApiKey()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm whitespace-nowrap">
+                        Guardar
+                    </button>
+                </div>
+            </div>
+            <p id="key-status-msg" class="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                🔒 Tu clave se almacena localmente en tu navegador y no pasa por ningún servidor intermediario. Si se deja en blanco, la app intentará conectar con el servicio por defecto.
+            </p>
+        </section>
+
+        <!-- Input Section: Dense Text Entry -->
+        <section class="bg-white dark:bg-slate-800/90 rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <label for="source-text" class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <span>📄 Texto Original (Académico / Complejo)</span>
+                </label>
+                <!-- Quick sample text button -->
+                <button onclick="loadSampleText()" type="button" class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                    <span>💡 Cargar Texto de Ejemplo</span>
+                </button>
+            </div>
+
+            <div class="relative">
+                <textarea id="source-text" rows="7" 
+                    placeholder="Pega aquí el artículo científico, capítulo de libro, ley o texto complejo que deseas adaptar para una lectura rápida y sin estrés..." 
+                    class="w-full p-4 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base leading-relaxed resize-y transition-all"></textarea>
+                <div class="flex justify-between items-center text-xs text-slate-400 mt-1 px-1">
+                    <span id="char-counter">0 caracteres</span>
+                    <span>Consejo TDAH: Puedes pegar fragmentos por secciones para mayor enfoque.</span>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="flex justify-center pt-2">
+                <button id="adapt-btn" onclick="processTextWithGemini()" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-700 hover:to-purple-800 text-white font-bold text-base rounded-xl shadow-md hover:shadow-indigo-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <span class="text-lg">✨</span>
+                    <span>Adaptar Lectura</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Loading State Box -->
+        <div id="loading-container" class="hidden bg-white dark:bg-slate-800 rounded-2xl p-8 border border-indigo-100 dark:border-slate-700 shadow-md text-center space-y-4">
+            <div class="inline-flex relative">
+                <div class="w-16 h-16 rounded-full border-4 border-indigo-200 dark:border-indigo-950 border-t-indigo-600 animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center text-xl">🧠</div>
+            </div>
+            <div class="space-y-1">
+                <h3 id="loading-step-title" class="text-lg font-bold text-slate-800 dark:text-slate-100">Procesando Adaptación Cognitiva...</h3>
+                <p id="loading-step-desc" class="text-sm text-slate-500 dark:text-slate-400">Analizando estructuras complejas, dividiendo oraciones y extrayendo conceptos clave.</p>
+            </div>
+            <!-- Accessible Progress Step Dots -->
+            <div class="flex justify-center items-center gap-2 pt-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse delay-150"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse delay-300"></span>
+            </div>
+        </div>
+
+        <!-- Custom Notification Toast Banner -->
+        <div id="toast-banner" class="hidden rounded-xl p-4 border flex items-start justify-between gap-3 shadow-md transition-all">
+            <div class="flex items-start gap-2.5">
+                <span id="toast-icon" class="text-xl">⚠️</span>
+                <div>
+                    <h4 id="toast-title" class="font-bold text-sm">Aviso</h4>
+                    <p id="toast-msg" class="text-xs sm:text-sm mt-0.5">Mensaje de notificación</p>
+                </div>
+            </div>
+            <button onclick="hideToast()" class="text-slate-400 hover:text-slate-600 font-bold px-2">✕</button>
+        </div>
+
+        <!-- Results Container (Hidden initially) -->
+        <div id="results-container" class="hidden space-y-6">
+
+            <!-- Audio & Action Control Bar -->
+            <div class="bg-indigo-50 dark:bg-slate-800/80 rounded-2xl p-4 border border-indigo-100 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3">
+                <!-- TTS Controls -->
+                <div class="flex items-center flex-wrap gap-2">
+                    <button id="tts-play-btn" onclick="toggleSpeech()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl flex items-center gap-2 shadow-sm transition-colors">
+                        <span id="tts-icon">🔊</span>
+                        <span id="tts-btn-text">Lectura en Voz Alta</span>
+                    </button>
+                    <button id="tts-stop-btn" onclick="stopSpeech()" class="hidden px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold text-sm rounded-xl transition-colors">
+                        ⏹️ Detener
+                    </button>
+                    <div class="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300">
+                        <span>Velocidad:</span>
+                        <select id="tts-speed" onchange="updateSpeechRate()" class="bg-transparent font-bold focus:outline-none cursor-pointer">
+                            <option value="0.8">0.8x (Lento)</option>
+                            <option value="1.0" selected>1.0x (Normal)</option>
+                            <option value="1.2">1.2x (Rápido)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Export & Copy Actions -->
+                <div class="flex items-center gap-2">
+                    <button onclick="copyAdaptedText()" class="px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm">
+                        <span>📋</span>
+                        <span>Copiar Todo</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECTION 1: 💡 EN RESUMEN (3 Puntos Clave) -->
+            <section class="bg-white dark:bg-slate-800 rounded-2xl p-6 border-2 border-amber-200 dark:border-amber-900/40 shadow-sm space-y-4">
+                <div class="flex items-center gap-3 border-b border-amber-100 dark:border-amber-900/30 pb-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-700 dark:text-amber-300 text-lg font-bold">
+                        💡
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">En Resumen (3 Puntos Clave)</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Las ideas esenciales sintetizadas para retención inmediata</p>
+                    </div>
+                </div>
+
+                <div id="summary-content" class="grid gap-3 sm:grid-cols-3">
+                    <!-- Dynamic summary cards injected here -->
+                </div>
+            </section>
+
+            <!-- SECTION 2: 📖 LECTURA ADAPTADA -->
+            <section class="bg-white dark:bg-slate-800 rounded-2xl p-6 border-2 border-indigo-200 dark:border-indigo-900/40 shadow-sm space-y-4">
+                <div class="flex items-center gap-3 border-b border-indigo-100 dark:border-indigo-900/30 pb-3">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-700 dark:text-indigo-300 text-lg font-bold">
+                        📖
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">Lectura Adaptada</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Párrafos ultra cortos (máx. 2 oraciones) con negritas en conceptos clave</p>
+                    </div>
+                </div>
+
+                <div id="adapted-reading-content" class="space-y-4 text-base sm:text-lg leading-relaxed text-slate-800 dark:text-slate-100">
+                    <!-- Dynamic short paragraphs injected here -->
+                </div>
+            </section>
+
+            <!-- SECTION 3: 🧠 GLOSARIO RÁPIDO -->
+            <section class="bg-white dark:bg-slate-800 rounded-2xl p-6 border-2 border-emerald-200 dark:border-emerald-900/40 shadow-sm space-y-4">
+                <div class="flex items-center gap-3 border-b border-emerald-100 dark:border-emerald-900/30 pb-3">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-700 dark:text-emerald-300 text-lg font-bold">
+                        🧠
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">Glosario Rápido</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Definiciones sencillas sin jerga técnica compleja</p>
+                    </div>
+                </div>
+
+                <div id="glossary-content" class="grid gap-3 sm:grid-cols-2">
+                    <!-- Dynamic glossary items injected here -->
+                </div>
+            </section>
+
+        </div>
+
+    </main>
+
+    <!-- Accessible Footer -->
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 mt-12 text-center text-xs text-slate-500 dark:text-slate-400">
+        <div class="max-w-4xl mx-auto px-4 space-y-1">
+            <p class="font-medium">Neuro-Focus — Herramienta de Accesibilidad Cognitiva y Neurodiversidad</p>
+            <p class="text-slate-400">Diseñado para apoyar el aprendizaje adaptativo en TDAH, Dislexia y procesamiento visual.</p>
+        </div>
+    </footer>
+
+    <script>
+        // App State
+        let currentFont = 'lexend';
+        let currentTheme = 'cream';
+        let baseFontSize = 16; // px
+        let isApiKeyVisible = false;
+        let isRulerActive = false;
+        let speechSynth = window.speechSynthesis;
+        let currentUtterance = null;
+        let isSpeaking = false;
+        let lastGeneratedData = null;
+
+        // Sample dense academic text for instant demonstration
+        const SAMPLE_TEXT = `La plasticidad neuronal, o neuroplasticidad, representa la propiedad intrínseca del sistema nervioso central para modificar su arquitectura cytoestructural y funcionalidad como respuesta adaptativa a estímulos ambientales, aprendizaje o tras un traumatismo encefálico. Mediante procesos moleculares complejos de potenciación a largo plazo (LTP) y depresión a largo plazo (LTD), las conexiones sinápticas experimentan remodelaciones bioquímicas y reordenamientos en la densidad de receptores postsinápticos, facilitando una reorganización cortical altamente dinámica y funcional.`;
+
+        // Initialize on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSavedApiKey();
+            setupTextareaCounter();
+            setupReadingRuler();
+            // Default theme and font
+            setFont('lexend');
+            setTheme('cream');
+        });
+
+        function setFont(fontKey) {
+            currentFont = fontKey;
+            const body = document.getElementById('app-body');
+            body.classList.remove('font-dyslexic-lexend', 'font-dyslexic-atkinson', 'font-standard');
+
+            const btnLexend = document.getElementById('font-lexend-btn');
+            const btnAtkinson = document.getElementById('font-atkinson-btn');
+            const btnInter = document.getElementById('font-inter-btn');
+
+            const activeClass = "bg-white dark:bg-slate-700 shadow-sm text-indigo-700 dark:text-indigo-300 font-bold";
+            const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 font-medium";
+
+            [btnLexend, btnAtkinson, btnInter].forEach(btn => btn.className = `px-2.5 py-1 rounded-md transition-all ${inactiveClass}`);
+
+            if (fontKey === 'lexend') {
+                body.classList.add('font-dyslexic-lexend');
+                btnLexend.className = `px-2.5 py-1 rounded-md transition-all ${activeClass}`;
+            } else if (fontKey === 'atkinson') {
+                body.classList.add('font-dyslexic-atkinson');
+                btnAtkinson.className = `px-2.5 py-1 rounded-md transition-all ${activeClass}`;
+            } else {
+                body.classList.add('font-standard');
+                btnInter.className = `px-2.5 py-1 rounded-md transition-all ${activeClass}`;
+            }
+        }
+
+        function setTheme(themeKey) {
+            currentTheme = themeKey;
+            const body = document.getElementById('app-body');
+            body.classList.remove('dark', 'bg-cream-100', 'bg-mint-50', 'bg-softblue-50', 'bg-slate-950');
+
+            if (themeKey === 'cream') {
+                body.classList.add('bg-cream-100', 'text-slate-800');
+            } else if (themeKey === 'mint') {
+                body.classList.add('bg-mint-50', 'text-slate-900');
+            } else if (themeKey === 'softblue') {
+                body.classList.add('bg-softblue-50', 'text-slate-900');
+            } else if (themeKey === 'dark') {
+                body.classList.add('dark', 'bg-slate-950', 'text-slate-100');
+            }
+        }
+
+        function changeFontSize(delta) {
+            baseFontSize = Math.min(Math.max(baseFontSize + delta, 14), 24);
+            document.querySelectorAll('#adapted-reading-content p, #source-text').forEach(el => {
+                el.style.fontSize = `${baseFontSize}px`;
+            });
+        }
+
+        function setupReadingRuler() {
+            const ruler = document.getElementById('focus-ruler');
+            window.addEventListener('mousemove', (e) => {
+                if (isRulerActive) {
+                    ruler.style.top = `${e.clientY - 26}px`;
+                }
+            });
+            window.addEventListener('touchmove', (e) => {
+                if (isRulerActive && e.touches.length > 0) {
+                    ruler.style.top = `${e.touches[0].clientY - 26}px`;
+                }
+            });
+        }
+
+        function toggleReadingRuler() {
+            isRulerActive = !isRulerActive;
+            const ruler = document.getElementById('focus-ruler');
+            const btn = document.getElementById('ruler-toggle-btn');
+            if (isRulerActive) {
+                ruler.style.display = 'block';
+                btn.classList.add('bg-amber-100', 'border-amber-400', 'text-amber-900');
+                showToast("info", "Regla de enfoque activada", "Mueve el cursor sobre las líneas de texto para guiar tu mirada.");
+            } else {
+                ruler.style.display = 'none';
+                btn.classList.remove('bg-amber-100', 'border-amber-400', 'text-amber-900');
+            }
+        }
+
+        function loadSavedApiKey() {
+            const savedKey = localStorage.getItem('neurofocus_gemini_key');
+            if (savedKey) {
+                document.getElementById('api-key-input').value = savedKey;
+                document.getElementById('key-status-msg').innerText = '✅ API Key cargada desde el almacenamiento local de tu navegador.';
+            }
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            if (key) {
+                localStorage.setItem('neurofocus_gemini_key', key);
+                showToast("success", "Clave Guardada", "Tu API Key de Gemini se guardó de forma segura en localStorage.");
+                document.getElementById('key-status-msg').innerText = '✅ API Key guardada correctamente.';
+            } else {
+                localStorage.removeItem('neurofocus_gemini_key');
+                showToast("info", "Clave Eliminada", "Se usará la clave predeterminada del sistema.");
+                document.getElementById('key-status-msg').innerText = 'ℹ️ Se utilizará la conexión predeterminada si está disponible.';
+            }
+        }
+
+        function toggleApiKeyVisibility() {
+            const input = document.getElementById('api-key-input');
+            isApiKeyVisible = !isApiKeyVisible;
+            input.type = isApiKeyVisible ? 'text' : 'password';
+        }
+
+        function setupTextareaCounter() {
+            const textarea = document.getElementById('source-text');
+            const counter = document.getElementById('char-counter');
+            textarea.addEventListener('input', () => {
+                const count = textarea.value.length;
+                const words = textarea.value.trim() ? textarea.value.trim().split(/\s+/).length : 0;
+                counter.innerText = `${words} palabras | ${count} caracteres`;
+            });
+        }
+
+        function loadSampleText() {
+            const textarea = document.getElementById('source-text');
+            textarea.value = SAMPLE_TEXT;
+            textarea.dispatchEvent(new Event('input'));
+            showToast("info", "Texto de Ejemplo Cargado", "Haz clic en '✨ Adaptar Lectura' para ver la transformación.");
+        }
+
+        async function processTextWithGemini() {
+            const sourceText = document.getElementById('source-text').value.trim();
+            const userApiKey = document.getElementById('api-key-input').value.trim();
+
+            if (!sourceText) {
+                showToast("warning", "Campo Vacío", "Por favor ingresa o pega un texto académico para procesar.");
+                return;
+            }
+
+            // Show loading UI
+            document.getElementById('loading-container').classList.remove('hidden');
+            document.getElementById('results-container').classList.add('hidden');
+            hideToast();
+            stopSpeech();
+
+            // Smooth scroll to loading state
+            document.getElementById('loading-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Dynamic loading micro-copy
+            const loadingTitles = [
+                "Analizando Estructura Compleja...",
+                "Simplificando Vocabulario TDAH...",
+                "Formateando Párrafos Accesibles..."
+            ];
+            let titleIdx = 0;
+            const titleInterval = setInterval(() => {
+                titleIdx = (titleIdx + 1) % loadingTitles.length;
+                document.getElementById('loading-step-title').innerText = loadingTitles[titleIdx];
+            }, 1200);
+
+            // Construct Gemini Request
+            const apiKey = userApiKey || "";
+            // Use standard model endpoint
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+            const systemPrompt = `Eres un psicopedagogo experto en accesibilidad cognitiva, neurodiversidad, TDAH y dislexia.
+Tu trabajo es transformar textos densos y complejos en lecturas altamente amigables.
+
+REGLAS OBLIGATORIAS DE FORMATO:
+1. RESUMEN: Proporciona exactamente 3 puntos clave sintetizados y muy claros.
+2. LECTURA ADAPTADA: Divide todo el texto en párrafos sumamente cortos (MÁXIMO 2 ORACIONES por párrafo). Cada párrafo DEBE comenzar con un emoji relevante al tema del párrafo. Usa formato **negrita** para resaltar únicamente los conceptos e ideas clave dentro de cada párrafo.
+3. GLOSARIO: Identifica de 3 a 5 palabras o conceptos difíciles presentes en el texto original y proporciona una explicación sumamente sencilla y directa (como para un niño de 12 años).
+
+Responde EXCLUSIVAMENTE en formato JSON válido siguiendo el esquema solicitado.`;
+
+            const payload = {
+                contents: [{
+                    parts: [{
+                        text: `Transforma este texto denso siguiendo tus instrucciones de accesibilidad cognitiva:\n\n${sourceText}`
+                    }]
+                }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            summary: {
+                                type: "ARRAY",
+                                items: { type: "STRING" },
+                                description: "3 puntos clave clave del resumen"
+                            },
+                            adapted_paragraphs: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        emoji: { type: "STRING" },
+                                        text: { type: "STRING", description: "Texto corto con **negritas** en palabras clave" }
+                                    },
+                                    required: ["emoji", "text"]
+                                }
+                            },
+                            glossary: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        term: { type: "STRING" },
+                                        definition: { type: "STRING" }
+                                    },
+                                    required: ["term", "definition"]
+                                }
+                            }
+                        },
+                        required: ["summary", "adapted_paragraphs", "glossary"]
+                    }
+                }
+            };
+
+            try {
+                let response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                // Fallback attempt to gemini-3-flash-preview if 1.5 endpoint has issues
+                if (!response.ok && response.status === 404) {
+                    const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                    response = await fetch(fallbackUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                }
+
+                clearInterval(titleInterval);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error?.message || `Error de conexión con Gemini API (Código: ${response.status})`);
+                }
+
+                const data = await response.json();
+                const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!jsonText) {
+                    throw new Error("Respuesta recibida sin formato estructurado válido.");
+                }
+
+                const parsedResult = JSON.parse(jsonText);
+                lastGeneratedData = parsedResult;
+
+                // Render structured results
+                renderResults(parsedResult);
+
+                document.getElementById('loading-container').classList.add('hidden');
+                document.getElementById('results-container').classList.remove('hidden');
+
+                // Smooth scroll to results
+                document.getElementById('results-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            } catch (err) {
+                clearInterval(titleInterval);
+                document.getElementById('loading-container').classList.add('hidden');
+                console.error("Gemini API Error:", err);
+
+                let userMsg = err.message;
+                if (userMsg.includes("API key")) {
+                    userMsg = "La API Key ingresada parece inválida o ha superado su límite. Verifica tu clave de Gemini.";
+                }
+
+                showToast("error", "Error al procesar", userMsg);
+            }
+        }
+
+        function renderResults(data) {
+            // 1. Render Summary (3 Key Points)
+            const summaryContainer = document.getElementById('summary-content');
+            summaryContainer.innerHTML = '';
+            if (data.summary && Array.isArray(data.summary)) {
+                data.summary.slice(0, 3).forEach((point, idx) => {
+                    const card = document.createElement('div');
+                    card.className = "p-4 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 flex items-start gap-3";
+                    card.innerHTML = `
+                        <span class="w-6 h-6 rounded-full bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">${idx + 1}</span>
+                        <p class="text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-medium leading-relaxed">${escapeHtml(point)}</p>
+                    `;
+                    summaryContainer.appendChild(card);
+                });
+            }
+
+            // 2. Render Adapted Reading Paragraphs
+            const readingContainer = document.getElementById('adapted-reading-content');
+            readingContainer.innerHTML = '';
+            if (data.adapted_paragraphs && Array.isArray(data.adapted_paragraphs)) {
+                data.adapted_paragraphs.forEach((pObj) => {
+                    const p = document.createElement('p');
+                    p.className = "p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-700/60 flex items-start gap-3 shadow-sm hover:border-indigo-300 transition-colors";
+                    p.style.fontSize = `${baseFontSize}px`;
+
+                    // Parse markdown bold **word** to styled HTML <strong>
+                    const formattedText = parseMarkdownBold(pObj.text || "");
+
+                    p.innerHTML = `
+                        <span class="text-xl sm:text-2xl shrink-0 select-none pt-0.5">${pObj.emoji || "📖"}</span>
+                        <span class="leading-relaxed text-slate-800 dark:text-slate-100 flex-grow">${formattedText}</span>
+                    `;
+                    readingContainer.appendChild(p);
+                });
+            }
+
+            // 3. Render Glossary
+            const glossaryContainer = document.getElementById('glossary-content');
+            glossaryContainer.innerHTML = '';
+            if (data.glossary && Array.isArray(data.glossary)) {
+                data.glossary.forEach((item) => {
+                    const card = document.createElement('div');
+                    card.className = "p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 space-y-1.5";
+                    card.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold text-sm sm:text-base">🔹 ${escapeHtml(item.term)}</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed pl-5">${escapeHtml(item.definition)}</p>
+                    `;
+                    glossaryContainer.appendChild(card);
+                });
+            }
+        }
+
+        // Helper to format Markdown **bold** keywords safely
+        function parseMarkdownBold(text) {
+            const escaped = escapeHtml(text);
+            return escaped.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-indigo-950 dark:text-amber-300 bg-amber-100 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded border border-amber-200/60 dark:border-indigo-800/60">$1</strong>');
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function toggleSpeech() {
+            if (isSpeaking) {
+                if (speechSynth.paused) {
+                    speechSynth.resume();
+                    updateSpeechButtonState(true);
+                } else {
+                    speechSynth.pause();
+                    updateSpeechButtonState(false, "Pausado");
+                }
+            } else {
+                startSpeech();
+            }
+        }
+
+        function startSpeech() {
+            if (!lastGeneratedData) return;
+
+            // Assemble complete speech string
+            let speechText = "En resumen. ";
+            if (lastGeneratedData.summary) {
+                speechText += lastGeneratedData.summary.join(". ") + ". ";
+            }
+            speechText += "Lectura adaptada. ";
+            if (lastGeneratedData.adapted_paragraphs) {
+                speechText += lastGeneratedData.adapted_paragraphs.map(p => p.text.replace(/\*\*/g, '')).join(". ") + ". ";
+            }
+
+            currentUtterance = new SpeechSynthesisUtterance(speechText);
+            currentUtterance.lang = 'es-ES';
+            
+            const speedSelect = document.getElementById('tts-speed');
+            currentUtterance.rate = parseFloat(speedSelect.value) || 1.0;
+
+            // Select Spanish voice if available
+            const voices = speechSynth.getVoices();
+            const esVoice = voices.find(v => v.lang.startsWith('es'));
+            if (esVoice) {
+                currentUtterance.voice = esVoice;
+            }
+
+            currentUtterance.onstart = () => {
+                isSpeaking = true;
+                updateSpeechButtonState(true);
+                document.getElementById('tts-stop-btn').classList.remove('hidden');
+            };
+
+            currentUtterance.onend = () => {
+                stopSpeech();
+            };
+
+            currentUtterance.onerror = () => {
+                stopSpeech();
+            };
+
+            speechSynth.cancel(); // Stop any pending audio
+            speechSynth.speak(currentUtterance);
+        }
+
+        function stopSpeech() {
+            if (speechSynth) {
+                speechSynth.cancel();
+            }
+            isSpeaking = false;
+            updateSpeechButtonState(false);
+            document.getElementById('tts-stop-btn').classList.add('hidden');
+        }
+
+        function updateSpeechRate() {
+            if (isSpeaking) {
+                startSpeech(); // Restart with new speed
+            }
+        }
+
+        function updateSpeechButtonState(playing, customLabel) {
+            const icon = document.getElementById('tts-icon');
+            const label = document.getElementById('tts-btn-text');
+            if (playing) {
+                icon.innerText = "⏸️";
+                label.innerText = customLabel || "Pausar Lectura";
+            } else {
+                icon.innerText = "🔊";
+                label.innerText = customLabel || "Lectura en Voz Alta";
+            }
+        }
+
+        function copyAdaptedText() {
+            if (!lastGeneratedData) return;
+
+            let plainText = "💡 EN RESUMEN:\n";
+            lastGeneratedData.summary?.forEach(s => plainText += `• ${s}\n`);
+            plainText += "\n📖 LECTURA ADAPTADA:\n";
+            lastGeneratedData.adapted_paragraphs?.forEach(p => plainText += `${p.emoji} ${p.text.replace(/\*\*/g, '')}\n\n`);
+            plainText += "🧠 GLOSARIO:\n";
+            lastGeneratedData.glossary?.forEach(g => plainText += `• ${g.term}: ${g.definition}\n`);
+
+            // Use fallback copy method safe for iFrame sandbox
+            const dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = plainText;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+
+            showToast("success", "Copiado al Portapapeles", "El texto adaptado se ha copiado correctamente.");
+        }
+
+        function showToast(type, title, message) {
+            const toast = document.getElementById('toast-banner');
+            const icon = document.getElementById('toast-icon');
+            const titleEl = document.getElementById('toast-title');
+            const msgEl = document.getElementById('toast-msg');
+
+            toast.className = "rounded-xl p-4 border flex items-start justify-between gap-3 shadow-md transition-all ";
+
+            if (type === "error") {
+                toast.classList.add("bg-rose-50", "border-rose-200", "text-rose-900", "dark:bg-rose-950/40", "dark:border-rose-900");
+                icon.innerText = "🚨";
+            } else if (type === "warning") {
+                toast.classList.add("bg-amber-50", "border-amber-200", "text-amber-900", "dark:bg-amber-950/40", "dark:border-amber-900");
+                icon.innerText = "⚠️";
+            } else if (type === "success") {
+                toast.classList.add("bg-emerald-50", "border-emerald-200", "text-emerald-900", "dark:bg-emerald-950/40", "dark:border-emerald-900");
+                icon.innerText = "✅";
+            } else {
+                toast.classList.add("bg-indigo-50", "border-indigo-200", "text-indigo-900", "dark:bg-indigo-950/40", "dark:border-indigo-900");
+                icon.innerText = "💡";
+            }
+
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+            toast.classList.remove('hidden');
+
+            // Auto hide after 6 seconds
+            setTimeout(() => {
+                hideToast();
+            }, 6000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast-banner').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
